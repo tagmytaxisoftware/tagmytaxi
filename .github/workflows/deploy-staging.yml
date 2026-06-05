@@ -1,0 +1,77 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Staging (ECS Fargate)
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: me-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/api/Dockerfile
+          target: production
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/tagmytaxi/api:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/tagmytaxi/api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push web-app image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/web-app/Dockerfile
+          target: production
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/tagmytaxi/web-app:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/tagmytaxi/web-app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update ECS task definition (API)
+        id: task-def-api
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/task-definition-api.json
+          container-name: api
+          image: ${{ steps.login-ecr.outputs.registry }}/tagmytaxi/api:${{ github.sha }}
+
+      - name: Deploy API to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+          service: tagmytaxi-api-staging
+          cluster: tagmytaxi-staging
+          wait-for-service-stability: true
+
+      - name: Smoke test staging
+        run: |
+          sleep 15
+          curl -f https://staging.tagmytaxi.ae/health || exit 1

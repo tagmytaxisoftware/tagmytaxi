@@ -1,0 +1,28 @@
+{
+  "name": "@tagmytaxi/dispatcher-panel",
+  "version": "2.0.0",
+  "description": "TagMyTaxi real-time dispatch console — Next.js 14",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start -p 3003",
+    "typecheck": "tsc --noEmit",
+    "lint": "next lint",
+    "clean": "rimraf .next"
+  },
+  "dependencies": {
+    "@tagmytaxi/shared": "*",
+    "next": "^14.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.60",
+    "@types/react-dom": "^18.2.19",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.4.2"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "./tenant.config.schema.json",
+  "tenantId": "cityride-dubai",
+  "brandName": "CityRide",
+  "primaryColor": "#1A73E8",
+  "secondaryColor": "#0D47A1",
+  "logoUrl": "https://cdn.cityride.ae/logo.png",
+  "faviconUrl": "https://cdn.cityride.ae/favicon.ico",
+  "supportedLocales": ["en-US", "ar-AE"],
+  "defaultLocale": "ar-AE",
+  "currency": "AED",
+  "timezone": "Asia/Dubai",
+  "mapProvider": "google",
+  "customDomain": "rider.cityride.ae",
+  "supportEmail": "support@cityride.ae",
+  "supportPhone": "+97180012345",
+  "smsSenderId": "CITYRIDE",
+  "firebaseProjectId": "cityride-dubai-prod",
+  "enabledFeatures": {
+    "scheduledRides": true,
+    "rideSharing": false,
+    "corporateAccounts": true,
+    "loyaltyProgram": true,
+    "surgeNotifications": true,
+    "driverTipping": true,
+    "rideTracking": true,
+    "liveChat": false,
+    "sos": true,
+    "rideHistory": true,
+    "receipts": true,
+    "multipleStops": false
+  },
+  "paymentGateways": ["stripe", "paypal"],
+  "vehicleCategories": ["economy", "comfort", "suv", "xl"],
+  "notificationChannels": ["push", "sms", "email"],
+  "rbac": {
+    "roles": ["PASSENGER", "DRIVER", "DISPATCHER", "FLEET_MANAGER", "ADMIN"],
+    "customPermissions": []
+  },
+  "slaTargets": {
+    "driverAssignmentMaxSeconds": 30,
+    "minimumDriverRating": 3.5,
+    "initialSearchRadiusKm": 5,
+    "maxSearchExpansions": 3
+  },
+  "isActive": true,
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}

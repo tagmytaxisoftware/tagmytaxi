@@ -1,0 +1,21 @@
+{
+  "name": "@tagmytaxi/shared",
+  "version": "2.0.0",
+  "description": "Shared TypeScript types, interfaces, constants, and utilities for the TagMyTaxi platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "jest --passWithNoTests",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.2"
+  },
+  "files": ["dist"],
+  "sideEffects": false
+}

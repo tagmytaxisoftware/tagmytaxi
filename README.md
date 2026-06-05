@@ -1,185 +1,238 @@
-# TagMyTaxi
+# TagMyTaxi Platform
 
-An on-demand, white-label Taxi Dispatch Software offering Taxi Booking Software, Taxi App For Android & iOS, Cloud Taxi Dispatch System, and complete Dispatch Management Software for taxi companies and startups worldwide.
+> White-label ride-hailing SaaS platform — production-grade, multi-tenant, microservices architecture.
 
-## 🎯 Features
+An enterprise-grade, fully configurable white-label ride-hailing platform powering taxi companies, ride-hailing startups, corporate shuttle services, and rental fleets worldwide.
 
-- **Taxi Dispatch Software**: Real-time cloud-based dispatching with live fleet visibility and vehicle status tracking
-- **Taxi Booking Software**: Seamless ride booking for passengers with map, scheduling, and multi-category selection
-- **Taxi App For Android & iOS**: Native mobile apps for both passengers and drivers with full ride lifecycle management
-- **Software For Taxi Company**: White-label platform fully branded to your company — logo, colors, and identity
-- **App For Taxi Service**: Driver app with online status, live map, trip acceptance, and earnings tracking
-- **Taxi Dispatch App**: Smart driver dispatch with active ride indicators, performance overview, and real-time alerts
-- **Dispatch Management Software**: Admin dashboard with fleet overview, issue alerts, and operational metrics
-- **Taxi Dispatch Software Cloud**: Scalable cloud infrastructure — no servers, no hardware, instant setup
-- **Cloud Taxi Dispatch System**: Multi-tenant SaaS architecture supporting fleets from 1 to 50,000+ vehicles — powered by Taxi Dispatch Software
-- **Taxi Software**: End-to-end taxi management covering bookings, drivers, revenue, and fleet analytics
+---
 
-## 🚀 Product Suite
+## Platform Overview
 
-- **Passenger App**: Ride now, reserve, or rent — with live map, driver matching, and flexible payment options
-- **Driver App**: Online/offline toggle, live ride requests, trip management, and earnings breakdown
-- **Admin Dashboard**: Fleet map, vehicle health, distance analytics, energy insights, and operational metrics
-- **Dispatch Console**: Real-time trip assignment, driver monitoring, and issue resolution tools
+TagMyTaxi delivers a complete end-to-end ride-hailing ecosystem:
 
-## 📦 Getting Started
+| Component | Technology | Description |
+|-----------|-----------|-------------|
+| Passenger App | React Native (iOS + Android) | Book, track, and pay for rides |
+| Driver App | React Native (iOS + Android) | Accept rides, navigate, track earnings |
+| Web App | Next.js 14 + TypeScript | Browser-based booking and tracking |
+| Admin Dashboard | Next.js 14 + TypeScript | Fleet management, analytics, configuration |
+| Dispatch Console | Next.js 14 + Socket.IO | Real-time ride assignment and driver monitoring |
+| REST API | Node.js + Express + TypeScript | Core business logic and orchestration |
+| Matching Service | TypeScript (microservice) | Geospatial driver-ride matching engine |
+| Tracking Service | TypeScript + Redis Pub/Sub | Real-time GPS tracking pipeline |
+| Billing Service | TypeScript + Stripe/PayPal | Fare calculation and payment processing |
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| Frontend | React.js · Next.js 14 · TypeScript · Redux Toolkit · Tailwind CSS · Material UI |
+| Mobile | React Native · iOS · Android |
+| Backend | Node.js · Express.js · TypeScript · REST API · Socket.IO |
+| Database | PostgreSQL 16 (PostGIS) · Redis 7 |
+| Real-Time | Socket.IO · WebSockets · Redis Pub/Sub |
+| Maps | Google Maps API · Geolocation Services |
+| Auth & Security | JWT · OAuth 2.0 · RBAC |
+| Cloud & DevOps | AWS · ECS Fargate · Docker · Nginx · GitHub Actions · Terraform |
+| Payments | Stripe · PayPal · Tap · Telr |
+| Notifications | Firebase Cloud Messaging · Twilio SMS · Email |
+| Analytics | Google Analytics · Sentry · Structured Logging |
+| Testing | Jest · React Testing Library · Playwright · k6 |
+| Architecture | Microservices · Event-Driven Design · Multi-Tenant SaaS |
+
+---
+
+## Repository Structure
+
+```
+tagmytaxi/
+├── packages/
+│   ├── shared/            # @tagmytaxi/shared — TypeScript types, interfaces, utilities
+│   ├── api/               # REST API (Express.js + Socket.IO)
+│   ├── web-app/           # Passenger web app (Next.js 14)
+│   ├── admin-panel/       # Admin dashboard (Next.js 14)
+│   ├── dispatcher-panel/  # Dispatch console (Next.js 14 + real-time)
+│   ├── passenger-app/     # Passenger mobile app (React Native)
+│   └── driver-app/        # Driver mobile app (React Native)
+├── services/
+│   ├── matching-service/  # Ride-driver matching engine
+│   ├── tracking-service/  # Real-time GPS tracking pipeline
+│   └── billing-service/   # Fare calculation + payment processing
+├── database/
+│   ├── migrations/        # PostgreSQL migrations (PostGIS, partitioned tables)
+│   └── seeds/             # Demo data for development
+├── deployment/
+│   ├── docker/            # Nginx config, multi-stage Dockerfiles
+│   ├── kubernetes/        # Kustomize base + overlays (staging/production)
+│   └── terraform/         # AWS infrastructure (ECS, RDS, ElastiCache, VPC)
+├── integrations/          # Google Maps, Stripe, Firebase, Twilio
+├── docs/
+│   ├── adr/               # Architecture Decision Records
+│   ├── architecture/      # System overview, data flow diagrams
+│   └── api/               # OpenAPI 3.1 specification
+├── security/              # SECURITY.md + STRIDE threat model
+├── testing/               # k6 load tests, Postman collection, E2E docs
+├── tenant.config.json     # Multi-tenant configuration example
+├── tenant.config.schema.json  # JSON Schema for IDE validation
+├── docker-compose.yml     # Full stack local development
+└── turbo.json             # Turborepo build pipeline
+```
+
+---
+
+## Multi-Tenant Architecture
+
+Each white-label deployment is driven by a `tenant.config.json` file. Tenants are fully isolated at the API, service, and database levels — no cross-tenant data leakage is architecturally possible.
+
+Key tenant configuration capabilities:
+- **Branding**: logo, primary colour, custom domain
+- **Locale & currency**: multi-language including RTL (Arabic)
+- **Feature flags**: scheduled rides, ride sharing, loyalty, tipping, SOS
+- **Payment gateways**: Stripe, PayPal, Tap, Telr (per-tenant selection)
+- **SLA targets**: driver assignment timeout, minimum driver rating, search radius
+- **RBAC roles**: PASSENGER, DRIVER, DISPATCHER, FLEET_MANAGER, ADMIN
+
+See [`tenant.config.schema.json`](tenant.config.schema.json) for the complete validated schema.
+
+---
+
+## Service Architecture
+
+The three core operational loops are isolated microservices with clean interface contracts:
+
+```
+IMatchingService       →   AbstractMatchingService   →   [Production Implementation]
+ITrackingService       →   AbstractTrackingService   →   [Production Implementation]
+IBillingService        →   AbstractBillingService    →   [Production Implementation]
+```
+
+This architecture enables:
+- **Independent scaling** per service (matching is CPU-bound; tracking is I/O-bound)
+- **Swap-in implementations** — replace any service implementation without touching the API layer
+- **Full testability** — `MockMatchingService`, `MockTrackingService`, `MockBillingService` enable deterministic unit tests without external dependencies
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+ (`nvm use` reads `.nvmrc`)
+- Docker and Docker Compose
+- npm 10+
+
+### Local Development
 
 ```bash
-# Visit the website
-https://www.tagmytaxi.ae/
+# Clone and install
+git clone https://github.com/PixelSanctuary/tagmytaxi.git
+cd tagmytaxi
+npm install
 
-# Request a Free Demo
-https://www.tagmytaxi.ae/contact-form.php
+# Start infrastructure (PostgreSQL + Redis)
+docker-compose up -d postgres redis
 
-# Start your 15-day free trial — no credit card required
-https://www.tagmytaxi.ae/contact-form.php
+# Build shared types (prerequisite for all other packages)
+npm run build --workspace=packages/shared
+
+# Start full stack (all apps hot-reload)
+npm run dev
 ```
 
-## 🛠️ Configuration
-
-### Passenger App
-
-- Set pickup and destination with live map integration
-- Choose ride category: Economy, Comfort, Sedan, or Premium
-- Select Solo or Pool ride with flexible savings
-- Schedule rides or book instantly
-- Book for family, friends, or colleagues with a single toggle
-
-<table>
-  <tr>
-    <td><img src="https://images.pixieset.com/860713511/80233a2797d56c60532b26a20201474b-large.png" width="100%"/></td>
-    <td><img src="https://images.pixieset.com/860713511/c1509cdca492c286f90943152efce7cf-large.png" width="100%"/></td>
-  </tr>
-</table>
-
-### Driver App
-
-- Toggle online/offline status with one tap
-- View live ride requests with active pulse indicator on map
-- Track online hours, total trips, and earnings in real-time
-- Access detailed financial breakdown: cash collected, tips, and avg per trip
-
- <p align="center">
-  <img src="https://images.pixieset.com/860713511/c28f5249a7529d55ca6660565723d0cd-large.png" width="350"/>
-</p>
-
-### Admin Dashboard
-
-- Monitor total vehicles, active fleet, and vehicles with issues
-- View all vehicles live on the dispatch map with status indicators
-- Analyse weekly distance trends and energy consumption metrics
-- Add new vehicles and manage fleet operations from one screen
-
-<table>
-  <tr>
-    <td><img src="https://images.pixieset.com/860713511/1ef24b067adea7e33112d73e6572e4ab-large.png" width="100%"/></td>
-    <td><img src="https://images.pixieset.com/860713511/c28f5249a7529d55ca6660565723d0cd-large.png" width="100%"/></td>
-  </tr>
-</table>
-
-## 📁 Platform Structure
-
-```
-TagMyTaxi/
-├── Passenger App (Android & iOS)
-│   ├── Home Screen              # Ride now, Reserve, Rent a car
-│   ├── Booking Screen           # Location, ride type, payment, schedule
-│   └── Trip Tracking            # Live driver location & ETA
-├── Driver App (Android & iOS)
-│   ├── Home Screen              # Online status, live map, ride requests
-│   ├── Trip Management          # Accept, track, and complete rides
-│   └── Earnings Screen          # Daily, weekly, monthly revenue breakdown
-├── Admin Dashboard (Web)
-│   ├── Fleet Overview           # Total, active, and issue vehicles
-│   ├── Live Vehicle Map         # Real-time positions and status
-│   ├── Distance Analytics       # Weekly distance alerts and averages
-│   └── Energy Insights          # Consumption tracking per vehicle
-└── Dispatch Console (Web)
-    ├── Trip Assignment           # Manual and auto dispatch
-    ├── Driver Monitoring         # Online hours and activity
-    └── Reports & Analytics       # Revenue, trips, and performance
-```
-
-## 🎨 Design System
-
-### Brand Colors
-
-```css
---primary:        #E8000E   /* TagMyTaxi Red */
---background:     #1A1A1A   /* App Dark Background */
---surface:        #2C2C2C   /* Card Surface */
---text-primary:   #FFFFFF   /* Primary Text */
---text-secondary: #A0A0A0   /* Secondary Text */
---success:        #00C853   /* Online / Active */
---warning:        #FF6D00   /* Issues / Alerts */
-```
-
-### Typography
-
-- **Font**: System-native (iOS SF Pro / Android Roboto)
-- **Headings**: Bold, large display for earnings and metrics
-- **Body**: Regular, legible at all screen sizes
-
-## 📱 User Journey
-
-### Passenger
-1. **Open App** → See home with quick ride actions
-2. **Enter Destination** → Live map loads with nearby drivers
-3. **Select Ride Type** → Economy, Comfort, Sedan, Premium, Solo or Pool
-4. **Confirm Booking** → Driver matched, trip begins
-5. **Reach Destination** → Pay and rate — under 5 taps
-
-### Driver
-1. **Go Online** → Status bar turns active, map loads
-2. **Receive Request** → Ride request appears with pickup details
-3. **Accept & Navigate** → Live GPS to passenger
-4. **Complete Trip** → Earnings updated instantly in dashboard
-
-<p align="center">
-  <img src="https://images.pixieset.com/860713511/c28f5249a7529d55ca6660565723d0cd-large.png" width="350"/>
-</p>
-
-## 🚢 Deployment
-
-### Cloud (Default)
-All TagMyTaxi instances run on the cloud out of the box — no installation required.
+### Run Tests
 
 ```bash
-# Request access
-https://www.tagmytaxi.ae/contact-form.php
-
-# Demo available within 24 hours
-# Full onboarding and white-labelling included
+npm test
+# With coverage
+npm test -- --coverage
 ```
 
-### On-Premise (Enterprise)
-Available for enterprise clients with custom infrastructure requirements. Contact the team for details.
-
-## 📝 Solutions
+### Run Full Stack with Docker
 
 ```bash
-Taxi Companies        # Traditional fleets going digital
-Ride-Hailing Startups # Launch an Uber-like business fast
-Corporate Shuttles    # Scheduled and on-demand employee transport
-Rental Services       # Car rental with booking and tracking
-Paratransit           # Accessibility-focused fleet management
+docker-compose up --build
 ```
 
-## 🔧 Integrations
+Services:
+- Web app: http://localhost:3000
+- API: http://localhost:3001
+- API docs: http://localhost:3001/health
 
-- **Google Maps** — Live navigation, pickup/drop detection, ETA
-- **Payment Gateways** — Cash, card, and digital wallet support
-- **SMS & Push Notifications** — Trip alerts for passengers and drivers
-- **White-Label Branding** — Full custom logo, colors, and app name
+---
 
-## 📄 License
+## API Documentation
 
-© 2026 TagMyTaxi. All rights reserved.
+The full OpenAPI 3.1 specification is at [`docs/api/openapi.yaml`](docs/api/openapi.yaml).
 
-## 🤝 Contributing
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login` | POST | Authenticate, issue JWT |
+| `/api/v1/auth/refresh` | POST | Refresh access token |
+| `/api/v1/rides` | POST | Create ride request |
+| `/api/v1/rides/:id` | GET | Get ride details |
+| `/api/v1/rides/:id/cancel` | PATCH | Cancel a ride |
+| `/api/v1/rides/:id/track` | GET | Server-Sent Events location stream |
+| `/api/v1/drivers` | GET | List drivers (fleet manager) |
+| `/api/v1/billing/estimate` | POST | Calculate fare estimate |
+| `/api/v1/billing/charge` | POST | Process payment |
+| `/ws/tracking` | WebSocket | Real-time driver location |
 
-This is a proprietary platform. For partnership or integration inquiries, reach out via the website.
+---
 
-## 📞 Support
+## Deployment
 
-For inquiries, demos, or onboarding — visit [tagmytaxi.ae](https://www.tagmytaxi.ae) or use the contact form.
+### Staging
+
+Merges to `main` trigger automatic deployment to AWS ECS Fargate via GitHub Actions (`deploy-staging.yml`).
+
+### Production
+
+Production deployments are triggered manually via the `deploy-production` workflow with required approval gate.
+
+### Infrastructure (Terraform)
+
+```bash
+cd deployment/terraform
+terraform init
+terraform workspace select production
+terraform plan -var="environment=production"
+terraform apply
+```
+
+AWS resources provisioned: ECS Fargate cluster, RDS PostgreSQL 16 (Multi-AZ), ElastiCache Redis 7, Application Load Balancer, ACM certificate, Route53, ECR repositories, VPC with public/private subnets.
+
+---
+
+## Security
+
+- JWT authentication with 15-minute access token TTL
+- RBAC enforced on every API route via `requirePermission` middleware
+- Multi-tenant data isolation at API and database layers
+- All data encrypted at rest (AES-256) and in transit (TLS 1.2+)
+- PCI SAQ-A compliance — no raw card data stored (Stripe tokenisation)
+- STRIDE threat model: [`security/threat-model.md`](security/threat-model.md)
+
+To report a security vulnerability: **security@tagmytaxi.ae**  
+See [`security/SECURITY.md`](security/SECURITY.md) for the full responsible disclosure policy.
+
+---
+
+## White-Label Licensing
+
+TagMyTaxi is available for white-label licensing to enterprise accounts. The platform supports full brand customisation, custom domain deployment, and dedicated infrastructure.
+
+**Contact**: sales@tagmytaxi.ae  
+**Website**: https://tagmytaxi.ae  
+**Demo**: https://tagmytaxi.ae/demo
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, commit convention, and code standards.
+
+---
+
+© 2024–2026 TagMyTaxi Software. All rights reserved. See [LICENSE](LICENSE) for terms.

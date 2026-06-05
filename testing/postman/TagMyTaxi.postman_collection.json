@@ -1,0 +1,142 @@
+{
+  "info": {
+    "_postman_id": "tagmytaxi-v2-collection",
+    "name": "TagMyTaxi Platform API v2",
+    "description": "Complete API collection for TagMyTaxi Platform. Set the `baseUrl` and `tenantId` environment variables before running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "tenantId", "value": "demo-tenant", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "const body = pm.response.json();",
+                "pm.test('Has accessToken', () => pm.expect(body.accessToken).to.be.a('string'));",
+                "pm.collectionVariables.set('accessToken', body.accessToken);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"demo@tagmytaxi.ae\", \"password\": \"Demo1234!\"}"
+            },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Tenant-Id", "value": "{{tenantId}}" }],
+            "body": { "mode": "raw", "raw": "{\"refreshToken\": \"{{refreshToken}}\"}" },
+            "url": "{{baseUrl}}/api/v1/auth/refresh"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rides",
+      "item": [
+        {
+          "name": "Request Ride",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                "const body = pm.response.json();",
+                "pm.test('Has rideId', () => pm.expect(body.rideId).to.be.a('string'));",
+                "pm.collectionVariables.set('rideId', body.rideId);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"pickup\":{\"lat\":25.2048,\"lng\":55.2708,\"address\":\"Dubai Mall\"},\"dropoff\":{\"lat\":25.1972,\"lng\":55.2797,\"address\":\"Dubai Airport T3\"},\"vehicleCategoryId\":\"economy\"}"
+            },
+            "url": "{{baseUrl}}/api/v1/rides"
+          }
+        },
+        {
+          "name": "Get Ride",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}"
+          }
+        },
+        {
+          "name": "Cancel Ride",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/rides/{{rideId}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Get Fare Estimate",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "const b = pm.response.json(); pm.test('Has finalAmount', () => pm.expect(b.finalAmount).to.be.a('number'));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Id", "value": "{{tenantId}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"rideId\":\"{{rideId}}\"}" },
+            "url": "{{baseUrl}}/api/v1/billing/estimate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Status ok', () => pm.expect(pm.response.json().status).to.equal('ok'));"] } }],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@tagmytaxi/shared": ["../../packages/shared/src/index.ts"]
+    }
+  }
+}

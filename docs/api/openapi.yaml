@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: TagMyTaxi Platform API
+  description: |
+    REST API for the TagMyTaxi white-label ride-hailing platform.
+
+    All requests require the `X-Tenant-Id` header.
+    Authenticated endpoints require a Bearer JWT in the `Authorization` header.
+  version: 2.0.0
+  contact:
+    name: TagMyTaxi Platform Engineering
+    email: api@tagmytaxi.ae
+    url: https://docs.tagmytaxi.ae
+
+servers:
+  - url: https://api.tagmytaxi.ae/api/v1
+    description: Production
+  - url: https://staging-api.tagmytaxi.ae/api/v1
+    description: Staging
+  - url: http://localhost:3001/api/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z0-9-]+$'
+      example: cityride-dubai
+
+  schemas:
+    Coordinate:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90, example: 25.2048 }
+        lng: { type: number, minimum: -180, maximum: 180, example: 55.2708 }
+
+    NamedLocation:
+      allOf:
+        - $ref: '#/components/schemas/Coordinate'
+        - type: object
+          required: [address]
+          properties:
+            address: { type: string, example: 'Dubai Mall, Financial Centre Rd' }
+
+    ApiError:
+      type: object
+      required: [code, message, traceId, timestamp]
+      properties:
+        code: { type: string, example: 'RIDE_NOT_FOUND' }
+        message: { type: string, example: 'Ride not found.' }
+        traceId: { type: string, format: uuid }
+        timestamp: { type: string, format: date-time }
+
+    Ride:
+      type: object
+      properties:
+        rideId: { type: string, format: uuid }
+        status: { type: string, enum: [PENDING, DRIVER_ASSIGNED, DRIVER_ARRIVED, IN_PROGRESS, COMPLETED, CANCELLED, PAYMENT_FAILED] }
+        pickup: { $ref: '#/components/schemas/NamedLocation' }
+        dropoff: { $ref: '#/components/schemas/NamedLocation' }
+        currency: { type: string, example: 'AED' }
+        finalFareAmount: { type: number, example: 35.50 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    FareEstimate:
+      type: object
+      properties:
+        estimateId: { type: string }
+        expiresAt: { type: string, format: date-time }
+        currency: { type: string, example: 'AED' }
+        finalAmount: { type: number, example: 35.50 }
+        minimumFare: { type: number, example: 10.00 }
+        surgeMultiplier: { type: number, example: 1.0 }
+        breakdown:
+          type: object
+          properties:
+            baseFare: { type: number }
+            distanceFare: { type: number }
+            timeFare: { type: number }
+            taxes: { type: number }
+            platformFee: { type: number }
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 900 }
+        tokenType: { type: string, example: 'Bearer' }
+
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate user and issue JWT tokens
+      tags: [Auth]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+
+  /rides:
+    post:
+      summary: Create a ride request
+      tags: [Rides]
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pickup, dropoff, vehicleCategoryId]
+              properties:
+                pickup: { $ref: '#/components/schemas/NamedLocation' }
+                dropoff: { $ref: '#/components/schemas/NamedLocation' }
+                vehicleCategoryId: { type: string, example: 'economy' }
+                promoCode: { type: string }
+      responses:
+        '202':
+          description: Ride request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rideId: { type: string, format: uuid }
+                  status: { type: string, example: 'PENDING' }
+                  estimatedWaitSeconds: { type: integer, example: 120 }
+
+  /rides/{rideId}:
+    get:
+      summary: Get ride by ID
+      tags: [Rides]
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: rideId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Ride details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ride' }
+        '404':
+          description: Ride not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /rides/{rideId}/cancel:
+    patch:
+      summary: Cancel a ride
+      tags: [Rides]
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: rideId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Ride cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ride' }
+
+  /billing/estimate:
+    post:
+      summary: Calculate fare estimate
+      tags: [Billing]
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Fare estimate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FareEstimate' }

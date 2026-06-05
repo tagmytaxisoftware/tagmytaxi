@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tagmytaxi.ae/schemas/tenant-config.json",
+  "title": "TenantConfig",
+  "description": "Configuration schema for a TagMyTaxi white-label tenant",
+  "type": "object",
+  "required": ["tenantId", "brandName", "primaryColor", "logoUrl", "supportedLocales", "defaultLocale", "currency", "timezone", "mapProvider", "enabledFeatures", "paymentGateways", "vehicleCategories", "notificationChannels", "rbac", "slaTargets", "isActive", "createdAt", "supportEmail"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "tenantId": { "type": "string", "pattern": "^[a-z0-9-]+$", "minLength": 3, "maxLength": 64 },
+    "brandName": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "primaryColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "secondaryColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "logoUrl": { "type": "string", "format": "uri" },
+    "faviconUrl": { "type": "string", "format": "uri" },
+    "supportedLocales": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "defaultLocale": { "type": "string" },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "timezone": { "type": "string" },
+    "mapProvider": { "type": "string", "enum": ["google", "mapbox", "here", "azure"] },
+    "customDomain": { "type": "string", "format": "hostname" },
+    "supportEmail": { "type": "string", "format": "email" },
+    "supportPhone": { "type": "string", "pattern": "^\\+[1-9]\\d{1,14}$" },
+    "smsSenderId": { "type": "string", "maxLength": 11 },
+    "firebaseProjectId": { "type": "string" },
+    "enabledFeatures": {
+      "type": "object",
+      "required": ["scheduledRides", "rideSharing", "corporateAccounts", "loyaltyProgram", "surgeNotifications", "driverTipping", "rideTracking", "liveChat", "sos", "rideHistory", "receipts", "multipleStops"],
+      "properties": {
+        "scheduledRides": { "type": "boolean" },
+        "rideSharing": { "type": "boolean" },
+        "corporateAccounts": { "type": "boolean" },
+        "loyaltyProgram": { "type": "boolean" },
+        "surgeNotifications": { "type": "boolean" },
+        "driverTipping": { "type": "boolean" },
+        "rideTracking": { "type": "boolean" },
+        "liveChat": { "type": "boolean" },
+        "sos": { "type": "boolean" },
+        "rideHistory": { "type": "boolean" },
+        "receipts": { "type": "boolean" },
+        "multipleStops": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "paymentGateways": { "type": "array", "items": { "type": "string", "enum": ["stripe", "paypal", "tap", "telr"] }, "minItems": 1 },
+    "vehicleCategories": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "notificationChannels": { "type": "array", "items": { "type": "string", "enum": ["push", "sms", "email", "whatsapp"] } },
+    "rbac": {
+      "type": "object",
+      "required": ["roles", "customPermissions"],
+      "properties": {
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "customPermissions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "slaTargets": {
+      "type": "object",
+      "required": ["driverAssignmentMaxSeconds", "minimumDriverRating", "initialSearchRadiusKm", "maxSearchExpansions"],
+      "properties": {
+        "driverAssignmentMaxSeconds": { "type": "integer", "minimum": 10, "maximum": 120 },
+        "minimumDriverRating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "initialSearchRadiusKm": { "type": "number", "minimum": 0.5, "maximum": 50 },
+        "maxSearchExpansions": { "type": "integer", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "isActive": { "type": "boolean" },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
